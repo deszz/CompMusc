@@ -1,5 +1,5 @@
 ---
-title: "Computational Musicology"
+title: "Exploring my music compared to the class corpus"
 author: "Desmond Leung"
 output: 
   flexdashboard::flex_dashboard:
@@ -10,43 +10,76 @@ output:
 library(tidyverse)
 library(flexdashboard)
 library(plotly)
+library(knitr)
+library(kableExtra)
 ```
 
+### My Corpus
 
-### Dancability vs Arousal
+In this project, I analyze my tracks 'desmond-l-1' and 'desmond-l-2' compared to the Computational Musicology 2025 corpus using [Essentia](https://essentia.upf.edu/) features such as *danceability*, *energy*, *valence*, and *instrumentalness.*
+
+I curated my tracks using generative AI tool [Stable Audio](https://stableaudio.com/). The prompts I used were based on two of my favorite artists: [KI/KI](https://open.spotify.com/artist/0UMs6dTf23FC2fHc40fXNS?si=9d1d916c8ac54bb1) and [Marlon Hoffstadt](https://open.spotify.com/artist/0HHa7ZJZxUQlg5l2mB0N0f?si=58729cedd9684ce0). Both DJs are known for their high energetic music, combining acid and trance with techno.
+
+The table below presents the extracted Essentia feature values for my generated tracks.
+```{r}
+compmus2025 <- read_csv("compmus2025.csv")
+
+mycorpus <- compmus2025 |>
+  filter(filename %in% c('desmond-l-1','desmond-l-2'))
+  
+kable(mycorpus, caption = "Essentia Feature Analysis of My Tracks") |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+### The relationship between musical positiveness and emotion
 
 ```{r}
-aisc2024 <- read_csv("aisc2024.csv")
 
-aisc2024 |>                   # Start with the data
-  ggplot(                     # Set up the plot.
+mean_arousal <- mean(compmus2025$arousal, na.rm = TRUE)
+mean_valence <- mean(compmus2025$valence, na.rm = TRUE)
+slope <- mean_valence / mean_arousal  
+
+
+
+compmus2025 |>                   # Start with the data
+   ggplot(                     # Set up the plot.
     aes(
       x = arousal,
-      y = danceability,
-      size = instrumentalness,
-      colour = tempo,
-      label = artist
+      y = valence,
+      colour = danceability,
+      label = filename
     )
   ) +
   geom_point() +              # Scatter plot.
   geom_rug(linewidth = 0.1) + # Add 'fringes' to show data distribution.
+  # Add diagonal average line
+  geom_abline(intercept = 0, slope = slope, linetype = "dashed", color = "red", linewidth = 0.2) +
+
   geom_text(                  # Add text labels from above.
-    x = 121,
-    y = 4.91,
-    label = "Onda Corta - Sud America",
+    x = 5.525241,
+    y = 5.837563,
+    label = "desmond-l-1",
     size = 3,                 # Override size (not loudness here).
     hjust = "left",           # Align left side of label with the point.
     vjust = "center",         # Align vertical centre of label with the point.
-    angle = 30                # Rotate the text label
+    angle = 30,                # Rotate the text label
+  ) +
+  geom_text(                  # Add text labels from above.
+    x = 6.353199,
+    y = 5.886079,
+    label = "desmond-l-2",
+    hjust = "left",           # Align left side of label with the point.
+    vjust = "center",         # Align vertical centre of label with the point.
+    angle = 30,                # Rotate the text label
   ) +
   scale_x_continuous(         # Fine-tune the x axis.
-    limits = c(3, 5),
-    breaks = c(3, 4, 5), # Specify grid lines
+    limits = c(3, 7.5),
+    breaks = c(3, 4.5, 6, 7.5), # Specify grid lines
     minor_breaks = NULL       # Remove 'minor' grid lines.
   ) +
   scale_y_continuous(         # Fine-tune the y axis in the same way.
-    limits = c(0, 1),
-    breaks = c(0, 0.5, 1),
+    limits = c(3, 7.5),
+    breaks = c(3, 4.5, 6, 7.5), # Specify grid lines
     minor_breaks = NULL
   ) +
   scale_colour_viridis_c() +  # Use the popular viridis colour palette.
@@ -57,8 +90,12 @@ aisc2024 |>                   # Start with the data
   theme_light() +             # Use a simpler theme.
   labs(                       # Make the titles nice.
     x = "Arousal",
-    y = "Danceability",
-    colour = "Tempo"
+    y = "Valence",
+    colour = "Danceability"
   )
 ggplotly()
 ```
+***
+This graph explores the relationship between arousal and valence, with the danceability represented by the color.
+
+My tracks, **desmond-l-1**, **and desmond-l-2** score high in arousal and valence, meaning they are energetic and also emotionally positive. This aligns perfect with the sound of **KI/KI** and **Marlon Hoffstadt**.
