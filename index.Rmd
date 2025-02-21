@@ -99,3 +99,13 @@ ggplotly()
 This graph explores the relationship between arousal and valence, with the danceability represented by the color.
 
 My tracks, **desmond-l-1**, **and desmond-l-2** score high in arousal and valence, meaning they are energetic and also emotionally positive. This aligns perfect with the sound of **KI/KI** and **Marlon Hoffstadt**.
+
+### How rave-ready are my tracks compared to the Class Corpus?
+
+Compared to the class corpus, my tracks exhibit a higher combination of energy, emotional positivity, and danceability. This suggests that they are:
+
+- More suited for raves than the average track in the class corpus.
+- More danceable than most class tracks, making them well-suited for a high-energy electronic music setting.
+
+
+
