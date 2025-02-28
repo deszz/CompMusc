@@ -4,6 +4,11 @@ author: "Desmond Leung"
 output: 
   flexdashboard::flex_dashboard:
     storyboard: true
+    theme:
+      bg: "#2D1E40"
+      fg: "#F5F5F5"
+      primary: "#A3FFBA"
+      navbar-bg: "#875F9A"
 ---
 
 ```{r setup, include=FALSE}
@@ -12,8 +17,87 @@ library(flexdashboard)
 library(plotly)
 library(knitr)
 library(kableExtra)
+source("compmus.R")
 ```
 
+***
+Chromagrams and Cepstrograms  
+
+```{r, out.width="100%", out.height="60%"}
+
+"features/desmond-l-1.json" |>   
+  compmus_chroma(norm = "identity") |>                 # Change the norm
+  ggplot(aes(x = time, y = pc, fill = value)) + 
+  geom_raster() +
+  scale_y_continuous(
+    breaks = 0:11,
+    minor_breaks = NULL,
+    labels = c(
+                "C", "C#|Db", "D", "D#|Eb",
+                "E", "F", "F#|Gb", "G",
+                "G#|Ab", "A", "A#|Bb", "B"
+              )
+  ) +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL) +
+  theme_classic()            # Change the theme?
+
+"features/desmond-l-1.json" |>   
+  compmus_mfccs(norm = "identity") |>                  # Change the norm
+  ggplot(aes(x = time, y = mfcc, fill = value)) + 
+  geom_raster() +
+  scale_y_continuous(
+    breaks = 0:12,
+    minor_breaks = NULL,
+  ) +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = "Coefficient Number", fill = NULL) +
+  theme_classic()                                      # Change the theme?
+```
+
+***
+
+Explanation: Chroma & Timbre Analyse
+
+- **Chroma Self-Similarity:** this plot is visualizing the harmonic structure of a musical piece.Patterns in the chroma self similarity can point to repeating chords and music scales. The song chosen is the first track from Berend. This is because my tracks are unfortunatly not yet in the corpus. So I will explain this plot as soon as it is my song. The same goes for the timbre self similarity plot
+- **Timbre (MFCC) Self-Similarity:** This represents the timbre of the song. Variations in timbre can be related to instrumentelness and dynamics.
+
+By looking at the plots together we can look at similarities between the plots and maybe see some interesting patterns.
+
+```{r, out.width="100%", out.height="60%"}
+"features/desmond-l-1.json" |>                         # Change the track
+  compmus_chroma(norm = "identity") |>                 # Change the norm
+  compmus_self_similarity(
+    feature = pc,
+    distance = "euclidean"                             # Change the distance
+  ) |>   
+  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL) +
+  theme_classic()                                      # Change the theme?
+
+"features/desmond-l-1.json" |>                         # Change the track
+  compmus_mfccs(norm = "identity") |>                  # Change the norm
+  compmus_self_similarity(
+    feature = mfcc,
+    distance = "euclidean"                             # Change the distance
+  ) |>   
+  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL) +
+  theme_classic()                                      # Change the theme?
+```
+
+***
+
+Explanation: Chroma & Timbre Analyse
+
+- **Chroma Self-Similarity:** this plot is visualizing the harmonic structure of a musical piece.Patterns in the chroma self similarity can point to repeating chords and music scales. The song chosen is the first track from Berend. This is because my tracks are unfortunatly not yet in the corpus. So I will explain this plot as soon as it is my song. The same goes for the timbre self similarity plot
+- **Timbre (MFCC) Self-Similarity:** This represents the timbre of the song. Variations in timbre can be related to instrumentelness and dynamics.
+
+By looking at the plots together we can look at similarities between the plots and maybe see some interesting patterns.
 ### My Corpus
 
 In this project, I analyze my tracks 'desmond-l-1' and 'desmond-l-2' compared to the Computational Musicology 2025 corpus using [Essentia](https://essentia.upf.edu/) features such as *danceability*, *energy*, *valence*, and *instrumentalness.*
