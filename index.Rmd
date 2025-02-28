@@ -20,12 +20,41 @@ library(kableExtra)
 source("compmus.R")
 ```
 
-***
-Chromagrams and Cepstrograms  
+### Timbre & Chroma Analysis
 
-```{r, out.width="100%", out.height="60%"}
+```{r, out.width="50%", out.height="30%"}
 
-"features/desmond-l-1.json" |>   
+chroma_plot <- "features/desmond-l-1.json" |>   
+  compmus_chroma(norm = "identity") |>                 # Change the norm
+  compmus_self_similarity(
+    feature = pc,
+    distance = "euclidean"                             # Change the distance
+  ) |>
+  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL, title="Chroma-based self-similarity") +
+  theme_classic()       
+chroma_plot
+
+chroma_plot <- "features/desmond-l-1.json" |>  
+  compmus_mfccs(norm = "identity") |>                  # Change the norm
+  compmus_self_similarity(
+    feature = mfcc,
+    distance = "euclidean"                             # Change the distance
+  ) |>   
+  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL, title="Timbre-based self-similarity") +
+  theme_classic() 
+
+chroma_plot
+```
+
+```{r, out.width="50%", out.height="30%"}
+
+chroma_plot <- "features/desmond-l-1.json" |>   
   compmus_chroma(norm = "identity") |>                 # Change the norm
   ggplot(aes(x = time, y = pc, fill = value)) + 
   geom_raster() +
@@ -39,10 +68,11 @@ Chromagrams and Cepstrograms
               )
   ) +
   scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL) +
-  theme_classic()            # Change the theme?
+  labs(x = "Time (s)", y = NULL, fill = NULL, title="Chromagram") +
+  theme_classic()                                      # Change the theme?  
+chroma_plot
 
-"features/desmond-l-1.json" |>   
+chroma_plot <- "features/desmond-l-1.json" |>  
   compmus_mfccs(norm = "identity") |>                  # Change the norm
   ggplot(aes(x = time, y = mfcc, fill = value)) + 
   geom_raster() +
@@ -51,53 +81,25 @@ Chromagrams and Cepstrograms
     minor_breaks = NULL,
   ) +
   scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = "Coefficient Number", fill = NULL) +
+  labs(x = "Time (s)", y = "Coefficient Number", fill = NULL, title="Cepstrogram") +
   theme_classic()                                      # Change the theme?
+
+chroma_plot
 ```
 
 ***
 
 Explanation: Chroma & Timbre Analyse
 
-- **Chroma Self-Similarity:** this plot is visualizing the harmonic structure of a musical piece.Patterns in the chroma self similarity can point to repeating chords and music scales. The song chosen is the first track from Berend. This is because my tracks are unfortunatly not yet in the corpus. So I will explain this plot as soon as it is my song. The same goes for the timbre self similarity plot
-- **Timbre (MFCC) Self-Similarity:** This represents the timbre of the song. Variations in timbre can be related to instrumentelness and dynamics.
+- **Chroma-based Self-Similarity:** In this Self-Similarity Matrix, we identify gridlike patterns in the track, suggesting repeating harmonic structures, especially in the area from 50s-100s, as well as near the end. Overall the track we see repeated patterns, suggesting recurring motifs.
 
-By looking at the plots together we can look at similarities between the plots and maybe see some interesting patterns.
+- **Timbre (MFCC) Self-Similarity:** Here we see bright edges, implying that the intro and outro are similar. In the middle, we get segments where we have darker regions, especially from 90s-140s, meaning variations in timbre. We see patterns that reoccur meaning that we have repeating timbral elements throughout the track.
 
-```{r, out.width="100%", out.height="60%"}
-"features/desmond-l-1.json" |>                         # Change the track
-  compmus_chroma(norm = "identity") |>                 # Change the norm
-  compmus_self_similarity(
-    feature = pc,
-    distance = "euclidean"                             # Change the distance
-  ) |>   
-  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL) +
-  theme_classic()                                      # Change the theme?
+- **Chromagram:** In the Chromagram, we observe that the A note has a prominent frequency, especially from 55s and on. We also observe that between 00s-55s and 110-150s we have a structure with a presence of different pitches, meaning we have a **varied harmonic structure**.
 
-"features/desmond-l-1.json" |>                         # Change the track
-  compmus_mfccs(norm = "identity") |>                  # Change the norm
-  compmus_self_similarity(
-    feature = mfcc,
-    distance = "euclidean"                             # Change the distance
-  ) |>   
-  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL) +
-  theme_classic()                                      # Change the theme?
-```
+- **Cepstrogram:**: We observe a quite stable cepstrogram throughout the track, meaning that there are no drastical changes throughout the track.
 
-***
 
-Explanation: Chroma & Timbre Analyse
-
-- **Chroma Self-Similarity:** this plot is visualizing the harmonic structure of a musical piece.Patterns in the chroma self similarity can point to repeating chords and music scales. The song chosen is the first track from Berend. This is because my tracks are unfortunatly not yet in the corpus. So I will explain this plot as soon as it is my song. The same goes for the timbre self similarity plot
-- **Timbre (MFCC) Self-Similarity:** This represents the timbre of the song. Variations in timbre can be related to instrumentelness and dynamics.
-
-By looking at the plots together we can look at similarities between the plots and maybe see some interesting patterns.
 ### My Corpus
 
 In this project, I analyze my tracks 'desmond-l-1' and 'desmond-l-2' compared to the Computational Musicology 2025 corpus using [Essentia](https://essentia.upf.edu/) features such as *danceability*, *energy*, *valence*, and *instrumentalness.*
