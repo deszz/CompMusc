@@ -20,6 +20,263 @@ library(kableExtra)
 source("compmus.R")
 ```
 
+### Tempogram
+
+```{r, out.width="50%", out.height="30%"}
+"features/desmond-l-1.json" |>
+  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)", title="Cyclic Tempogram Track 1") +
+  theme_classic()
+
+"features/desmond-l-2.json" |> 
+  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)", title="Cyclic Tempogram Track 2") +
+  theme_classic()
+```
+
+***
+
+- **Tempogram Track 1:** TBC
+
+- **Tempogram Track 2:** TBC
+
+### Track Novelty
+
+#### Track 1
+
+```{r, out.width="50%", out.height="30%"}
+"features/desmond-l-1.json" |>
+  compmus_energy_novelty() |> 
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Energy Novelty", title="Energy Novelty Track 1")
+
+"features/desmond-l-1.json" |> 
+  compmus_spectral_novelty() |> 
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Spectral Novelty", title="Spectral Novelty Track 1")
+```
+
+***
+
+**Track 1**:
+
+- **Energy Novelty:** TBC
+
+- **Spectral Novelty:** TBC
+
+#### Track 2
+
+```{r, out.width="50%", out.height="30%"}
+"features/desmond-l-2.json" |>
+  compmus_energy_novelty() |> 
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Energy Novelty", title="Energy Novelty Track 2")
+
+"features/desmond-l-2.json" |> 
+  compmus_spectral_novelty() |> 
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Spectral Novelty", title="Spectral Novelty Track 2")
+```
+
+***
+**Track 2**:
+
+- **Energy Novelty:** TBC
+
+- **Spectral Novelty:** TBC
+
+
+### My Corpus
+
+In this project, I analyze my tracks 'desmond-l-1' and 'desmond-l-2' compared to the Computational Musicology 2025 corpus using [Essentia](https://essentia.upf.edu/) features such as *danceability*, *energy*, *valence*, and *instrumentalness.*
+
+I curated my tracks using generative AI tool [Stable Audio](https://stableaudio.com/). The prompts I used were based on two of my favorite artists: [KI/KI](https://open.spotify.com/artist/0UMs6dTf23FC2fHc40fXNS?si=9d1d916c8ac54bb1) and [Marlon Hoffstadt](https://open.spotify.com/artist/0HHa7ZJZxUQlg5l2mB0N0f?si=58729cedd9684ce0). Both DJs are known for their high energetic music, combining acid and trance with techno.
+
+The table below presents the extracted Essentia feature values for my generated tracks.
+```{r}
+compmus2025 <- read_csv("compmus2025.csv")
+
+mycorpus <- compmus2025 |>
+  filter(filename %in% c('desmond-l-1','desmond-l-2'))
+  
+kable(mycorpus, caption = "Essentia Feature Analysis of My Tracks") |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+### The relationship between musical positiveness and emotion
+
+```{r}
+
+mean_arousal <- mean(compmus2025$arousal, na.rm = TRUE)
+mean_valence <- mean(compmus2025$valence, na.rm = TRUE)
+slope <- mean_valence / mean_arousal  
+
+
+
+compmus2025 |>                   # Start with the data
+   ggplot(                     # Set up the plot.
+    aes(
+      x = arousal,
+      y = valence,
+      colour = danceability,
+      label = filename
+    )
+  ) +
+  geom_point() +              # Scatter plot.
+  geom_rug(linewidth = 0.1) + # Add 'fringes' to show data distribution.
+  # Add diagonal average line
+  geom_abline(intercept = 0, slope = slope, linetype = "dashed", color = "red", linewidth = 0.2) +
+  # Make specific points black
+  geom_point(
+    data = subset(compmus2025, filename %in% c("desmond-l-1", "desmond-l-2")),
+    aes(x = arousal, y = valence),
+    size = 3
+  ) +
+  geom_text(                  # Add text labels from above.
+    x = 5.525241,
+    y = 6.037563,
+    label = "desmond-l-1",
+    size = 3,                 # Override size (not loudness here).
+    hjust = "left",           # Align left side of label with the point.
+    vjust = "center",         # Align vertical centre of label with the point.
+    angle = 30,                # Rotate the text label
+    color = "#875F9A"
+  ) +
+  geom_text(                  # Add text labels from above.
+    x = 6.353199,
+    y = 6.086079,
+    label = "desmond-l-2",
+    size = 3,                 # Override size (not loudness here).
+    hjust = "left",           # Align left side of label with the point.
+    vjust = "center",         # Align vertical centre of label with the point.
+    angle = 30,                # Rotate the text label
+    color = "#875F9A"
+  ) +
+  scale_x_continuous(         # Fine-tune the x axis.
+    limits = c(3, 7.5),
+    breaks = c(3, 4.5, 6, 7.5), # Specify grid lines
+    minor_breaks = NULL       # Remove 'minor' grid lines.
+  ) +
+  scale_y_continuous(         # Fine-tune the y axis in the same way.
+    limits = c(3, 7.5),
+    breaks = c(3, 4.5, 6, 7.5), # Specify grid lines
+    minor_breaks = NULL
+  ) +
+  scale_colour_viridis_c() +  # Use the popular viridis colour palette.
+  scale_size_continuous(      # Fine-tune the sizes of each point.
+    trans = "exp",            # Use an exp transformation to emphasise loud..
+    guide = "none"            # Remove the legend for size.
+  ) +
+  theme_light() +             # Use a simpler theme.
+  labs(                       # Make the titles nice.
+    x = "Arousal",
+    y = "Valence",
+    colour = "Danceability"
+  )
+ggplotly()
+```
+***
+This graph explores the relationship between arousal and valence, with the danceability represented by the color.
+
+My tracks, **desmond-l-1**, **and desmond-l-2** score high in arousal and valence, meaning they are energetic and also emotionally positive. This aligns perfect with the sound of **KI/KI** and **Marlon Hoffstadt**.
+
+### How rave-ready are my tracks compared to the Class Corpus?
+
+Compared to the class corpus, my tracks exhibit a higher combination of energy, emotional positivity, and danceability. This suggests that they are:
+
+- More suited for raves than the average track in the class corpus.
+- More danceable than most class tracks, making them well-suited for a high-energy electronic music setting.
+
+### Chroma- and Timbre-based Similarity Analysis Track 1
+
+```{r, out.width="50%", out.height="30%"}
+
+chroma_plot <- "features/desmond-l-1.json" |>   
+  compmus_chroma(norm = "identity") |>                 # Change the norm
+  compmus_self_similarity(
+    feature = pc,
+    distance = "euclidean"                             # Change the distance
+  ) |>
+  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL, title="Chroma-based self-similarity") +
+  theme_classic()       
+chroma_plot
+
+chroma_plot <- "features/desmond-l-1.json" |>  
+  compmus_mfccs(norm = "identity") |>                  # Change the norm
+  compmus_self_similarity(
+    feature = mfcc,
+    distance = "euclidean"                             # Change the distance
+  ) |>   
+  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL, title="Timbre-based self-similarity") +
+  theme_classic() 
+
+chroma_plot
+```
+
+```{r, out.width="50%", out.height="30%"}
+
+chroma_plot <- "features/desmond-l-1.json" |>   
+  compmus_chroma(norm = "identity") |>                 # Change the norm
+  ggplot(aes(x = time, y = pc, fill = value)) + 
+  geom_raster() +
+  scale_y_continuous(
+    breaks = 0:11,
+    minor_breaks = NULL,
+    labels = c(
+                "C", "C#|Db", "D", "D#|Eb",
+                "E", "F", "F#|Gb", "G",
+                "G#|Ab", "A", "A#|Bb", "B"
+              )
+  ) +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL, title="Chromagram") +
+  theme_classic()                                      # Change the theme?  
+chroma_plot
+
+chroma_plot <- "features/desmond-l-1.json" |>  
+  compmus_mfccs(norm = "identity") |>                  # Change the norm
+  ggplot(aes(x = time, y = mfcc, fill = value)) + 
+  geom_raster() +
+  scale_y_continuous(
+    breaks = 0:12,
+    minor_breaks = NULL,
+  ) +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = "Coefficient Number", fill = NULL, title="Cepstrogram") +
+  theme_classic()                                      # Change the theme?
+
+chroma_plot
+```
+
+***
+- **Chroma-based Self-Similarity:** In this Self-Similarity Matrix, we identify gridlike patterns in the track, suggesting repeating harmonic structures, especially in the area from 50s-100s, as well as near the end. Overall the track we see repeated patterns, suggesting recurring motifs.
+
+- **Timbre (MFCC) Self-Similarity:** Here we see bright edges, implying that the intro and outro are similar. In the middle, we get segments where we have darker regions, especially from 90s-140s, meaning variations in timbre. We see patterns that reoccur meaning that we have repeating timbral elements throughout the track.
+
+- **Chromagram:** In the Chromagram, we observe that the A note has a prominent frequency, especially from 55s and on. We also observe that between 00s-55s and 110-150s we have a structure with a presence of different pitches, meaning we have a **varied harmonic structure**.
+
+- **Cepstrogram:**: We observe a quite stable cepstrogram throughout the track, meaning that there are no drastical changes throughout the track.
+
 ```{r}
 #      C     C#    D     Eb    E     F     F#    G     Ab    A     Bb    B
 major_chord <-
@@ -180,173 +437,3 @@ key_templates <-
 - **Keygram:** Here we observe a more distributed key activation compared to the first track. The lack of bright areas also suggest more key shifts, opposed to the patterns observed in the first track. This means that the second track is more varied harmonically. No key dominates over a longer time period. 
 
 - **Chordogram:** Compared to the keygram, the chordogram has more persistent bright regions, meaning that certain chord progressions last for longer periods. Overall, this track is more complex and chaotic than the first track. While listening to the track, I can confirm this. This track has way more frequent modulations and less structure, feeling all over the place.
-
-### My Corpus
-
-In this project, I analyze my tracks 'desmond-l-1' and 'desmond-l-2' compared to the Computational Musicology 2025 corpus using [Essentia](https://essentia.upf.edu/) features such as *danceability*, *energy*, *valence*, and *instrumentalness.*
-
-I curated my tracks using generative AI tool [Stable Audio](https://stableaudio.com/). The prompts I used were based on two of my favorite artists: [KI/KI](https://open.spotify.com/artist/0UMs6dTf23FC2fHc40fXNS?si=9d1d916c8ac54bb1) and [Marlon Hoffstadt](https://open.spotify.com/artist/0HHa7ZJZxUQlg5l2mB0N0f?si=58729cedd9684ce0). Both DJs are known for their high energetic music, combining acid and trance with techno.
-
-The table below presents the extracted Essentia feature values for my generated tracks.
-```{r}
-compmus2025 <- read_csv("compmus2025.csv")
-
-mycorpus <- compmus2025 |>
-  filter(filename %in% c('desmond-l-1','desmond-l-2'))
-  
-kable(mycorpus, caption = "Essentia Feature Analysis of My Tracks") |>
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
-```
-
-### The relationship between musical positiveness and emotion
-
-```{r}
-
-mean_arousal <- mean(compmus2025$arousal, na.rm = TRUE)
-mean_valence <- mean(compmus2025$valence, na.rm = TRUE)
-slope <- mean_valence / mean_arousal  
-
-
-
-compmus2025 |>                   # Start with the data
-   ggplot(                     # Set up the plot.
-    aes(
-      x = arousal,
-      y = valence,
-      colour = danceability,
-      label = filename
-    )
-  ) +
-  geom_point() +              # Scatter plot.
-  geom_rug(linewidth = 0.1) + # Add 'fringes' to show data distribution.
-  # Add diagonal average line
-  geom_abline(intercept = 0, slope = slope, linetype = "dashed", color = "red", linewidth = 0.2) +
-
-  geom_text(                  # Add text labels from above.
-    x = 5.525241,
-    y = 5.837563,
-    label = "desmond-l-1",
-    size = 3,                 # Override size (not loudness here).
-    hjust = "left",           # Align left side of label with the point.
-    vjust = "center",         # Align vertical centre of label with the point.
-    angle = 30,                # Rotate the text label
-  ) +
-  geom_text(                  # Add text labels from above.
-    x = 6.353199,
-    y = 5.886079,
-    label = "desmond-l-2",
-    hjust = "left",           # Align left side of label with the point.
-    vjust = "center",         # Align vertical centre of label with the point.
-    angle = 30,                # Rotate the text label
-  ) +
-  scale_x_continuous(         # Fine-tune the x axis.
-    limits = c(3, 7.5),
-    breaks = c(3, 4.5, 6, 7.5), # Specify grid lines
-    minor_breaks = NULL       # Remove 'minor' grid lines.
-  ) +
-  scale_y_continuous(         # Fine-tune the y axis in the same way.
-    limits = c(3, 7.5),
-    breaks = c(3, 4.5, 6, 7.5), # Specify grid lines
-    minor_breaks = NULL
-  ) +
-  scale_colour_viridis_c() +  # Use the popular viridis colour palette.
-  scale_size_continuous(      # Fine-tune the sizes of each point.
-    trans = "exp",            # Use an exp transformation to emphasise loud..
-    guide = "none"            # Remove the legend for size.
-  ) +
-  theme_light() +             # Use a simpler theme.
-  labs(                       # Make the titles nice.
-    x = "Arousal",
-    y = "Valence",
-    colour = "Danceability"
-  )
-ggplotly()
-```
-***
-This graph explores the relationship between arousal and valence, with the danceability represented by the color.
-
-My tracks, **desmond-l-1**, **and desmond-l-2** score high in arousal and valence, meaning they are energetic and also emotionally positive. This aligns perfect with the sound of **KI/KI** and **Marlon Hoffstadt**.
-
-### How rave-ready are my tracks compared to the Class Corpus?
-
-Compared to the class corpus, my tracks exhibit a higher combination of energy, emotional positivity, and danceability. This suggests that they are:
-
-- More suited for raves than the average track in the class corpus.
-- More danceable than most class tracks, making them well-suited for a high-energy electronic music setting.
-
-### Chroma- and Timbre-based Similarity Analysis Track 1
-
-```{r, out.width="50%", out.height="30%"}
-
-chroma_plot <- "features/desmond-l-1.json" |>   
-  compmus_chroma(norm = "identity") |>                 # Change the norm
-  compmus_self_similarity(
-    feature = pc,
-    distance = "euclidean"                             # Change the distance
-  ) |>
-  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL, title="Chroma-based self-similarity") +
-  theme_classic()       
-chroma_plot
-
-chroma_plot <- "features/desmond-l-1.json" |>  
-  compmus_mfccs(norm = "identity") |>                  # Change the norm
-  compmus_self_similarity(
-    feature = mfcc,
-    distance = "euclidean"                             # Change the distance
-  ) |>   
-  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL, title="Timbre-based self-similarity") +
-  theme_classic() 
-
-chroma_plot
-```
-
-```{r, out.width="50%", out.height="30%"}
-
-chroma_plot <- "features/desmond-l-1.json" |>   
-  compmus_chroma(norm = "identity") |>                 # Change the norm
-  ggplot(aes(x = time, y = pc, fill = value)) + 
-  geom_raster() +
-  scale_y_continuous(
-    breaks = 0:11,
-    minor_breaks = NULL,
-    labels = c(
-                "C", "C#|Db", "D", "D#|Eb",
-                "E", "F", "F#|Gb", "G",
-                "G#|Ab", "A", "A#|Bb", "B"
-              )
-  ) +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL, title="Chromagram") +
-  theme_classic()                                      # Change the theme?  
-chroma_plot
-
-chroma_plot <- "features/desmond-l-1.json" |>  
-  compmus_mfccs(norm = "identity") |>                  # Change the norm
-  ggplot(aes(x = time, y = mfcc, fill = value)) + 
-  geom_raster() +
-  scale_y_continuous(
-    breaks = 0:12,
-    minor_breaks = NULL,
-  ) +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = "Coefficient Number", fill = NULL, title="Cepstrogram") +
-  theme_classic()                                      # Change the theme?
-
-chroma_plot
-```
-
-***
-- **Chroma-based Self-Similarity:** In this Self-Similarity Matrix, we identify gridlike patterns in the track, suggesting repeating harmonic structures, especially in the area from 50s-100s, as well as near the end. Overall the track we see repeated patterns, suggesting recurring motifs.
-
-- **Timbre (MFCC) Self-Similarity:** Here we see bright edges, implying that the intro and outro are similar. In the middle, we get segments where we have darker regions, especially from 90s-140s, meaning variations in timbre. We see patterns that reoccur meaning that we have repeating timbral elements throughout the track.
-
-- **Chromagram:** In the Chromagram, we observe that the A note has a prominent frequency, especially from 55s and on. We also observe that between 00s-55s and 110-150s we have a structure with a presence of different pitches, meaning we have a **varied harmonic structure**.
-
-- **Cepstrogram:**: We observe a quite stable cepstrogram throughout the track, meaning that there are no drastical changes throughout the track.
-
