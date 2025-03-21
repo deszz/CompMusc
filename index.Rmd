@@ -17,88 +17,70 @@ library(flexdashboard)
 library(plotly)
 library(knitr)
 library(kableExtra)
+library(tidymodels)
+library(ggdendro)
+library(heatmaply)
 source("compmus.R")
+compmus2025 <- read_csv("compmus2025.csv")
 ```
 
-### Tempogram
+### Clustering
 
+#### Dendogram
 ```{r, out.width="50%", out.height="30%"}
-"features/desmond-l-1.json" |>
-  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
-  ggplot(aes(x = time, y = bpm, fill = power)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +
-  labs(x = "Time (s)", y = "Tempo (BPM)", title="Cyclic Tempogram Track 1") +
-  theme_classic()
+get_conf_mat <- function(fit) {
+  outcome <- .get_tune_outcome_names(fit)
+  fit |> 
+    collect_predictions() |> 
+    conf_mat(truth = outcome, estimate = .pred_class)
+}  
 
-"features/desmond-l-2.json" |> 
-  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
-  ggplot(aes(x = time, y = bpm, fill = power)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +
-  labs(x = "Time (s)", y = "Tempo (BPM)", title="Cyclic Tempogram Track 2") +
-  theme_classic()
+get_pr <- function(fit) {
+  fit |> 
+    conf_mat_resampled() |> 
+    group_by(Prediction) |> mutate(precision = Freq / sum(Freq)) |> 
+    group_by(Truth) |> mutate(recall = Freq / sum(Freq)) |> 
+    ungroup() |> filter(Prediction == Truth) |> 
+    select(class = Prediction, precision, recall)
+}  
+
+cluster_juice <-
+  recipe(
+    filename ~
+      arousal +
+      danceability +
+      instrumentalness +
+      tempo +
+      valence,
+    data = compmus2025
+  ) |>
+  step_center(all_predictors()) |>
+  step_scale(all_predictors()) |> 
+  # step_range(all_predictors()) |> 
+  prep(compmus2025) |>
+  juice() |>
+  column_to_rownames("filename")
+
+
+compmus_dist <- dist(cluster_juice, method = "euclidean")
+
+compmus_dist |> 
+  hclust(method = "single") |> # Try single, average, and complete.
+  dendro_data() |>
+  ggdendrogram()
+
 ```
 
-***
+#### Heatmaps
 
-- **Tempogram Track 1:** TBC
-
-- **Tempogram Track 2:** TBC
-
-### Track Novelty
-
-#### Track 1
-
-```{r, out.width="50%", out.height="30%"}
-"features/desmond-l-1.json" |>
-  compmus_energy_novelty() |> 
-  ggplot(aes(t, novelty)) +
-  geom_line() +
-  theme_minimal() +
-  labs(x = "Time (s)", y = "Energy Novelty", title="Energy Novelty Track 1")
-
-"features/desmond-l-1.json" |> 
-  compmus_spectral_novelty() |> 
-  ggplot(aes(t, novelty)) +
-  geom_line() +
-  theme_minimal() +
-  labs(x = "Time (s)", y = "Spectral Novelty", title="Spectral Novelty Track 1")
+```{r, out.width="100%", out.height="50%"}
+heatmaply(
+  cluster_juice,
+  hclustfun = hclust,
+  hclust_method = "average",  # Change for single, average, or complete linkage.
+  dist_method = "euclidean"
+)
 ```
-
-***
-
-**Track 1**:
-
-- **Energy Novelty:** TBC
-
-- **Spectral Novelty:** TBC
-
-#### Track 2
-
-```{r, out.width="50%", out.height="30%"}
-"features/desmond-l-2.json" |>
-  compmus_energy_novelty() |> 
-  ggplot(aes(t, novelty)) +
-  geom_line() +
-  theme_minimal() +
-  labs(x = "Time (s)", y = "Energy Novelty", title="Energy Novelty Track 2")
-
-"features/desmond-l-2.json" |> 
-  compmus_spectral_novelty() |> 
-  ggplot(aes(t, novelty)) +
-  geom_line() +
-  theme_minimal() +
-  labs(x = "Time (s)", y = "Spectral Novelty", title="Spectral Novelty Track 2")
-```
-
-***
-**Track 2**:
-
-- **Energy Novelty:** TBC
-
-- **Spectral Novelty:** TBC
-
 
 ### My Corpus
 
@@ -108,8 +90,6 @@ I curated my tracks using generative AI tool [Stable Audio](https://stableaudio.
 
 The table below presents the extracted Essentia feature values for my generated tracks.
 ```{r}
-compmus2025 <- read_csv("compmus2025.csv")
-
 mycorpus <- compmus2025 |>
   filter(filename %in% c('desmond-l-1','desmond-l-2'))
   
@@ -437,3 +417,82 @@ key_templates <-
 - **Keygram:** Here we observe a more distributed key activation compared to the first track. The lack of bright areas also suggest more key shifts, opposed to the patterns observed in the first track. This means that the second track is more varied harmonically. No key dominates over a longer time period. 
 
 - **Chordogram:** Compared to the keygram, the chordogram has more persistent bright regions, meaning that certain chord progressions last for longer periods. Overall, this track is more complex and chaotic than the first track. While listening to the track, I can confirm this. This track has way more frequent modulations and less structure, feeling all over the place.
+
+### Tempogram
+
+```{r, out.width="50%", out.height="30%"}
+"features/desmond-l-1.json" |>
+  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)", title="Cyclic Tempogram Track 1") +
+  theme_classic()
+
+"features/desmond-l-2.json" |> 
+  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)", title="Cyclic Tempogram Track 2") +
+  theme_classic()
+```
+
+***
+
+- **Tempogram Track 1:** TBC
+
+- **Tempogram Track 2:** TBC
+
+### Track Novelty
+
+#### Track 1
+
+```{r, out.width="50%", out.height="30%"}
+"features/desmond-l-1.json" |>
+  compmus_energy_novelty() |> 
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Energy Novelty", title="Energy Novelty Track 1")
+
+"features/desmond-l-1.json" |> 
+  compmus_spectral_novelty() |> 
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Spectral Novelty", title="Spectral Novelty Track 1")
+```
+
+***
+
+**Track 1**:
+
+- **Energy Novelty:** TBC
+
+- **Spectral Novelty:** TBC
+
+#### Track 2
+
+```{r, out.width="50%", out.height="30%"}
+"features/desmond-l-2.json" |>
+  compmus_energy_novelty() |> 
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Energy Novelty", title="Energy Novelty Track 2")
+
+"features/desmond-l-2.json" |> 
+  compmus_spectral_novelty() |> 
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Spectral Novelty", title="Spectral Novelty Track 2")
+```
+
+***
+**Track 2**:
+
+- **Energy Novelty:** TBC
+
+- **Spectral Novelty:** TBC
