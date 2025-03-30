@@ -1,5 +1,5 @@
 ---
-title: "Exploring my music compared to the class corpus"
+title: "The Rave Analysis"
 author: "Desmond Leung"
 output: 
   flexdashboard::flex_dashboard:
@@ -15,83 +15,87 @@ output:
 library(tidyverse)
 library(flexdashboard)
 library(plotly)
+library(ggplot2)
 library(knitr)
+library(htmltools)
 library(kableExtra)
 library(tidymodels)
 library(ggdendro)
 library(heatmaply)
+library(ggthemes)
+library(gt)
 source("compmus.R")
 compmus2025 <- read_csv("compmus2025.csv")
 ```
 
-### Clustering
+Introduction {.storyboard}
+=========================================
+### Welcome
 
-#### Dendogram
-```{r, out.width="50%", out.height="30%"}
-get_conf_mat <- function(fit) {
-  outcome <- .get_tune_outcome_names(fit)
-  fit |> 
-    collect_predictions() |> 
-    conf_mat(truth = outcome, estimate = .pred_class)
-}  
+#### Journey to the Rave Bunker
 
-get_pr <- function(fit) {
-  fit |> 
-    conf_mat_resampled() |> 
-    group_by(Prediction) |> mutate(precision = Freq / sum(Freq)) |> 
-    group_by(Truth) |> mutate(recall = Freq / sum(Freq)) |> 
-    ungroup() |> filter(Prediction == Truth) |> 
-    select(class = Prediction, precision, recall)
-}  
+Welcome to my portfolio! In this portfolio, I put two of my tracks 'ACIDITY' and 'GROOVEY' in the mix to compare to the Computational Musicology 2025 corpus using [Essentia](https://essentia.upf.edu/) features such as *Approachability*, *Arousal*, *Danceability*, *Engaginess*, *Instrumentalness*, *Tempo* and *Valence*.
 
-cluster_juice <-
-  recipe(
-    filename ~
-      arousal +
-      danceability +
-      instrumentalness +
-      tempo +
-      valence,
-    data = compmus2025
-  ) |>
-  step_center(all_predictors()) |>
-  step_scale(all_predictors()) |> 
-  # step_range(all_predictors()) |> 
-  prep(compmus2025) |>
-  juice() |>
-  column_to_rownames("filename")
+The mission?
+**Find out if my tracks are ready for the Rave Bunker?** 
 
+Sit-tight and get ready to **Dance!**
 
-compmus_dist <- dist(cluster_juice, method = "euclidean")
+### The Curation of the Tracks {.tabset}
 
-compmus_dist |> 
-  hclust(method = "single") |> # Try single, average, and complete.
-  dendro_data() |>
-  ggdendrogram()
+#### **From Prompt to Sound**
+I curated my tracks using generative AI tool [Stable Audio](https://stableaudio.com/). The prompts I used were based on two of my favorite artists: [KI/KI](https://open.spotify.com/artist/0UMs6dTf23FC2fHc40fXNS?si=9d1d916c8ac54bb1) and [Marlon Hoffstadt](https://open.spotify.com/artist/0HHa7ZJZxUQlg5l2mB0N0f?si=58729cedd9684ce0). 
 
-```
+##### **Who is KI/KI?**
+KI/KI is known for her fast-paced energy fusing Trance, Acid and Techno into a hypnotic and emotional experience. In 2025, she became the first woman to win the [Edison Award](https://www.parool.nl/kunst-media/roxy-dekker-wint-opnieuw-edison-amsterdamse-ki-ki-eerste-vrouwelijke-winnaar-in-categorie-dance~b1702ebe/) in the Dance Category, solidifying her significant influence in the Electronic Dance scene. 
 
-#### Heatmaps
+##### **Who is Marlon Hoffstadt?**
+Marlon Hoffstadt, better known as DJ Daddy Trance, is a renowned DJ from the Techno Capital: Berlin, Germany. He is known for his dynamic and versatile approach to electronic music. His playful blend of trance, house, techno and Eurodance are the perfect ingredients for Groovey dance music.
 
-```{r, out.width="100%", out.height="50%"}
-heatmaply(
-  cluster_juice,
-  hclustfun = hclust,
-  hclust_method = "average",  # Change for single, average, or complete linkage.
-  dist_method = "euclidean"
+##### **The Process**
+For the ingredients to generate my tracks, I fed ChatGPT detailed information about both artists, including their signature tracks, genre and moods they evoke on the dancefloor. Based on their profiles, ChatGPT generated prompts that were tailored to Stable Audio. I kept fine-tuning the prompts until I got the results that felt rave-ready. 
+
+#### **Listen to the Tracks**
+
+```{r}
+
+# Real tabs using Bootstrap nav-tabs structure
+my_tracks_tabs <- tags$div(
+  tags$ul(
+    class = "nav nav-tabs",
+    role = "tablist",
+    tags$li(class = "nav-item",
+            tags$a(class = "nav-link active", `data-toggle` = "tab", href = "#track1", "Track 1")),
+    tags$li(class = "nav-item",
+            tags$a(class = "nav-link", `data-toggle` = "tab", href = "#track2", "Track 2"))
+  ),
+  tags$div(
+    class = "tab-content",
+    
+    tags$div(
+      class = "tab-pane fade show active", id = "track1",
+      tags$h4("🎶 Track 1: ACIDITY (acidity-desmond-l-1)"),
+      tags$audio(src = "acidity-desmond-l-1.mp3", type = "audio/mp3", controls = NA),
+      tags$p("Prompt: Format: Band | Genre: Electronic | Subgenre: Trance, House, Progressive | Moods: Euphoric, Nostalgic, Uplifting, Dreamy, Flowing, Energetic, Melodic | BPM: 130-140 | Styles: 90s Rave, 2000s Trance Revival, Underground Club, Festival Sunset, Feel-Good, Peak-Time Grooves"),
+      tags$p("")
+    ),
+    
+    tags$div(
+      class = "tab-pane fade", id = "track2",
+      tags$h4("🎶 Track 2 GROOVEY (groovey-desmond-l-2)"),
+      tags$audio(src = "groovey-desmond-l-2.mp3", type = "audio/mp3", controls = NA),
+      tags$p("Format: Band | Genre: Electronic | Subgenre: Acid Techno, Trance, Rave | Moods: Hypnotic, Intense, Euphoric, Dark, Underground, Nostalgic, High-Energy | BPM: 140-150 | Styles: 90s Techno Revival"),
+      tags$p("")
+    )
+  )
 )
+
+HTML(as.character(my_tracks_tabs))
 ```
 
-### My Corpus
-
-In this project, I analyze my tracks 'desmond-l-1' and 'desmond-l-2' compared to the Computational Musicology 2025 corpus using [Essentia](https://essentia.upf.edu/) features such as *danceability*, *energy*, *valence*, and *instrumentalness.*
-
-I curated my tracks using generative AI tool [Stable Audio](https://stableaudio.com/). The prompts I used were based on two of my favorite artists: [KI/KI](https://open.spotify.com/artist/0UMs6dTf23FC2fHc40fXNS?si=9d1d916c8ac54bb1) and [Marlon Hoffstadt](https://open.spotify.com/artist/0HHa7ZJZxUQlg5l2mB0N0f?si=58729cedd9684ce0). Both DJs are known for their high energetic music, combining acid and trance with techno.
-
-The table below presents the extracted Essentia feature values for my generated tracks.
 ```{r}
 mycorpus <- compmus2025 |>
-  filter(filename %in% c('desmond-l-1','desmond-l-2'))
+  filter(filename %in% c('acidity-desmond-l-1','groovey-desmond-l-2'))
   
 kable(mycorpus, caption = "Essentia Feature Analysis of My Tracks") |>
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
@@ -122,38 +126,38 @@ compmus2025 |>                   # Start with the data
   geom_abline(intercept = 0, slope = slope, linetype = "dashed", color = "red", linewidth = 0.2) +
   # Make specific points black
   geom_point(
-    data = subset(compmus2025, filename %in% c("desmond-l-1", "desmond-l-2")),
+    data = subset(compmus2025, filename %in% c("acidity-desmond-l-1", "groovey-desmond-l-2")),
     aes(x = arousal, y = valence),
     size = 3
   ) +
   geom_text(                  # Add text labels from above.
-    x = 5.525241,
-    y = 6.037563,
-    label = "desmond-l-1",
+    x = 4.478108,
+    y = 3.986315,
+    label = "acidity-desmond-l-1",
     size = 3,                 # Override size (not loudness here).
     hjust = "left",           # Align left side of label with the point.
     vjust = "center",         # Align vertical centre of label with the point.
     angle = 30,                # Rotate the text label
-    color = "#875F9A"
+    color = "red"
   ) +
   geom_text(                  # Add text labels from above.
-    x = 6.353199,
-    y = 6.086079,
-    label = "desmond-l-2",
+    x = 5.076702,
+    y = 4.366221,
+    label = "groovey-desmond-l-2",
     size = 3,                 # Override size (not loudness here).
     hjust = "left",           # Align left side of label with the point.
     vjust = "center",         # Align vertical centre of label with the point.
     angle = 30,                # Rotate the text label
-    color = "#875F9A"
+    color = "blue"
   ) +
   scale_x_continuous(         # Fine-tune the x axis.
-    limits = c(3, 7.5),
-    breaks = c(3, 4.5, 6, 7.5), # Specify grid lines
+    limits = c(3, 6),
+    breaks = c(3, 4, 5, 6), # Specify grid lines
     minor_breaks = NULL       # Remove 'minor' grid lines.
   ) +
   scale_y_continuous(         # Fine-tune the y axis in the same way.
-    limits = c(3, 7.5),
-    breaks = c(3, 4.5, 6, 7.5), # Specify grid lines
+    limits = c(3, 6),
+    breaks = c(3, 4, 5, 6), # Specify grid lines
     minor_breaks = NULL
   ) +
   scale_colour_viridis_c() +  # Use the popular viridis colour palette.
@@ -172,92 +176,90 @@ ggplotly()
 ***
 This graph explores the relationship between arousal and valence, with the danceability represented by the color.
 
-My tracks, **desmond-l-1**, **and desmond-l-2** score high in arousal and valence, meaning they are energetic and also emotionally positive. This aligns perfect with the sound of **KI/KI** and **Marlon Hoffstadt**.
+My tracks, ACIDITY, GROOVEY score high in arousal and valence, meaning they are energetic and also emotionally positive. This aligns perfect with the sound of **KI/KI** and **Marlon Hoffstadt**.
 
-### How rave-ready are my tracks compared to the Class Corpus?
+### Comparison to the Class Corpus
+```{r}
+# Define features to compare
+features <- c(
+  "approachability",
+  "arousal",
+  "danceability",
+  "instrumentalness",
+  "engagingness",
+  "tempo",
+  "valence"
+)
 
-Compared to the class corpus, my tracks exhibit a higher combination of energy, emotional positivity, and danceability. This suggests that they are:
+# Min-max normalize all features between 0 and 1
+normalize_minmax <- function(x) {
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
 
-- More suited for raves than the average track in the class corpus.
-- More danceable than most class tracks, making them well-suited for a high-energy electronic music setting.
+corpus_normalized <- compmus2025 |>
+  select(filename, all_of(features)) |>
+  mutate(across(all_of(features), normalize_minmax))
 
-### Chroma- and Timbre-based Similarity Analysis Track 1
+# Create long version for plotting
+corpus_long <- pivot_longer(corpus_normalized, -filename, names_to = "Feature", values_to = "Value") |>
+  mutate(group = if_else(filename %in% c("acidity-desmond-l-1", "groovey-desmond-l-2"), "Desmond", "Class"))
 
-```{r, out.width="50%", out.height="30%"}
+# Split Desmond tracks and class corpus
+desmond_long <- corpus_long |> filter(group == "Desmond")
+class_long <- corpus_long |> filter(group == "Class")
 
-chroma_plot <- "features/desmond-l-1.json" |>   
-  compmus_chroma(norm = "identity") |>                 # Change the norm
-  compmus_self_similarity(
-    feature = pc,
-    distance = "euclidean"                             # Change the distance
-  ) |>
-  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL, title="Chroma-based self-similarity") +
-  theme_classic()       
-chroma_plot
-
-chroma_plot <- "features/desmond-l-1.json" |>  
-  compmus_mfccs(norm = "identity") |>                  # Change the norm
-  compmus_self_similarity(
-    feature = mfcc,
-    distance = "euclidean"                             # Change the distance
-  ) |>   
-  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL, title="Timbre-based self-similarity") +
-  theme_classic() 
-
-chroma_plot
-```
-
-```{r, out.width="50%", out.height="30%"}
-
-chroma_plot <- "features/desmond-l-1.json" |>   
-  compmus_chroma(norm = "identity") |>                 # Change the norm
-  ggplot(aes(x = time, y = pc, fill = value)) + 
-  geom_raster() +
-  scale_y_continuous(
-    breaks = 0:11,
-    minor_breaks = NULL,
-    labels = c(
-                "C", "C#|Db", "D", "D#|Eb",
-                "E", "F", "F#|Gb", "G",
-                "G#|Ab", "A", "A#|Bb", "B"
-              )
+p <- ggplot(class_long, aes(x = Feature, y = Value)) +
+  geom_boxplot(fill = "#A3FFBA", color = "#2D1E40", outlier.shape = NA, alpha = 0.6) +
+  geom_point(
+    data = desmond_long,
+    aes(color = filename),
+    size = 3,
+    position = position_jitter(width = 0.2)
   ) +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL, title="Chromagram") +
-  theme_classic()                                      # Change the theme?  
-chroma_plot
-
-chroma_plot <- "features/desmond-l-1.json" |>  
-  compmus_mfccs(norm = "identity") |>                  # Change the norm
-  ggplot(aes(x = time, y = mfcc, fill = value)) + 
-  geom_raster() +
-  scale_y_continuous(
-    breaks = 0:12,
-    minor_breaks = NULL,
+  scale_color_manual(
+    values = c("acidity-desmond-l-1" = "red", "groovey-desmond-l-2" = "blue"),
+    labels = c("ACIDITY", "GROOVEY")
   ) +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = "Coefficient Number", fill = NULL, title="Cepstrogram") +
-  theme_classic()                                      # Change the theme?
+  labs(
+    title = "My Tracks vs Class Corpus",
+    x = "Feature",
+    y = "Normalized Value [0-1]",
+    color = "My Tracks"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1)
+  ) +
+  ylim(0, 1)
 
-chroma_plot
+ggplotly(p)
 ```
 
 ***
-- **Chroma-based Self-Similarity:** In this Self-Similarity Matrix, we identify gridlike patterns in the track, suggesting repeating harmonic structures, especially in the area from 50s-100s, as well as near the end. Overall the track we see repeated patterns, suggesting recurring motifs.
+This boxplot visualizes how my tracks <span style="color:red"><b>ACIDITY</b></span> and <span style="color:blue"><b>GROOVEY</b></span> compare to the Class Corpus in terms of the features: Approachability, Arousal, Danceability, Engaginess, Instrumentalness, Tempo and Valence.
 
-- **Timbre (MFCC) Self-Similarity:** Here we see bright edges, implying that the intro and outro are similar. In the middle, we get segments where we have darker regions, especially from 90s-140s, meaning variations in timbre. We see patterns that reoccur meaning that we have repeating timbral elements throughout the track.
+**Approachability**: Both tracks score above average in Approachability, suggesting that the tracks are accessible for everyone and easy to vibe with. This is perfect for a rave track!
 
-- **Chromagram:** In the Chromagram, we observe that the A note has a prominent frequency, especially from 55s and on. We also observe that between 00s-55s and 110-150s we have a structure with a presence of different pitches, meaning we have a **varied harmonic structure**.
+**Arousal**: <span style="color:red"><b>ACIDITY</b></span> sits around the median, meaning that in terms of evoking emotions, it holds a moderate emotional impact compared to the other tracks. However, <span style="color:blue"><b>GROOVEY</b></span> has a significant higher impact in emotion. This suggests that this track delivers a more intense and exciting experience on the dancefloor!
 
-- **Cepstrogram:**: We observe a quite stable cepstrogram throughout the track, meaning that there are no drastical changes throughout the track.
+**Danceability**: Perhaps the most important factor for the rave bunker, danceability. Suprisingly, both of my tracks score low in terms to the Class Corpus, as they are just below the first quartile interval, according to the algorithm. Perhaps my tracks carry value in other features regarding the dancefloor, even though the algorithm does not classify it as danceable.
 
-```{r}
+**Instrumentalness**: <span style="color:red"><b>ACIDITY</b></span> is between the median of the tracks and <span style="color:blue"><b>GROOVEY</b></span> hovers under the first quartile. This is very interesting, because acid, trance and techno are usually more instrumental driven.
+
+**Tempo**: A good rave track should have high tempo. <span style="color:red"><b>ACIDITY</b></span> being around the third quartile suggests that it has the perfect tempo for a ravetrack. On the other hand, <span style="color:blue"><b>GROOVEY</b></span> scores very low in terms of Tempo, even though the suggested 140-150 BPM in the prompt. 
+
+**Valence**: <span style="color:red"><b>ACIDITY</b></span> hover near the median, suggesting a balanced emotional feeling. In contrast to <span style="color:blue"><b>GROOVEY</b></span> which scores above average in Valence. This means that it evokes happy emotions, which makes sense considering the playful melodies and the inspiration of Eurodance.
+
+**Conclusion:** 
+<span style="color:red"><b>ACIDITY</b></span> delivers high tempo, a balanced valence rating, and strong approachability. It fits the classic acid-trance track. Energetic and Hypnotic, which is reflected in high tempo, moderate arousal and balanced valence.
+
+<span style="color:blue"><b>GROOVEY</b></span> in contrast, has high emotional impact and high energy despite the low tempo, it scores high on valence and arousal, making it a more euphoric track, elevating mood and playfulness.
+
+These elements make both perfect rave-tracks, but perhaps not at the same time, in the same room.
+
+Chroma Features 
+=================================================================================
+```{r load chord and key information, include=FALSE}
 #      C     C#    D     Eb    E     F     F#    G     Ab    A     Bb    B
 major_chord <-
   c(   1,    0,    0,    0,    1,    0,    0,    1,    0,    0,    0,    0)
@@ -341,158 +343,645 @@ key_templates <-
   )
 ```
 
-### Keygrams & Chordograms
+Track 1 grams {.tabset}
+-----------------------------------------------------------------------------------------
+### Keygram Track 1 {data-width="350"}
 
-#### Track 1
-
-```{r, out.width="50%", out.height="30%"}
-"features/desmond-l-1.json" |> 
-  compmus_chroma(norm = "identity") |> 
+``` {r  keygram 1}
+"features/acidity-desmond-l-1.json" |> 
+  compmus_chroma(norm = "euclidean") |> 
   compmus_match_pitch_templates(
-    key_templates,         # Change to chord_templates if desired
-    norm = "identity",       # Try different norms (and match it with what you used in `compmus_chroma`)
-    distance = "cosine"   # Try different distance metrics
+    key_templates,  
+    norm = "euclidean",  
+    distance = "manhattan"
   ) |>
   ggplot(aes(x = time, y = name, fill = d)) + 
   geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = "Template", fill = NULL, title="Keygram Track 1") +
-  theme_classic()                                      # Change the theme?
+  scale_fill_viridis_c(guide = "none") + 
+  labs(x = "Time (s)", y = "Template", fill = NULL, title="Keygram Track 1 (ACIDITY)") +
+  theme_classic()
+```
+<div style="margin-top: 20px; padding: 10px;">
 
-"features/desmond-l-1.json" |> 
-  compmus_chroma(norm = "identity") |> 
+The Keygram of ACIDITY shows four clear segments. Two segents from 0-55s together with 100-150s marking a darker region and 55-100s and 150-180s marking lighter regions. It appears that mainly keys around A minor and A major are consistent through the whole track. Suggesting that the track is mainly in A. 
+
+</div>
+
+### Chordogram Track 1 {data-width="350"}
+
+``` {r  chordogram 1}
+"features/acidity-desmond-l-1.json" |> 
+  compmus_chroma(norm = "euclidean") |> 
   compmus_match_pitch_templates(
-    chord_templates,         # Change to chord_templates if desired
-    norm = "identity",       # Try different norms (and match it with what you used in `compmus_chroma`)
-    distance = "cosine"   # Try different distance metrics
+    chord_templates,  
+    norm = "euclidean",  
+    distance = "manhattan"
   ) |>
   ggplot(aes(x = time, y = name, fill = d)) + 
   geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  scale_fill_viridis_c(guide = "none") + 
   labs(x = "Time (s)", y = "Template", fill = NULL, title="Chordogram Track 1") +
-  theme_classic()                                      # Change the theme?
+  theme_classic()
 ```
+<div style="margin-top: 20px; padding: 10px;">
 
-***
+The Chordogram reveals that A minor and A major appear prominently again, just as the Keygram suggested. Again, we see the structures we observed in the keygram between 0-50s and 100-150s. 
 
-**Track 1**:
+Between 60-100s, we observe mostly A major, A7, F# minor, D major and D7, aligned with A minor, F major, F7 and D minor. These chords also appear after 150s. 
 
-- **Keygram:** In this graph we see obvious parts where the track is split into key areas. From 55s-100s we see brighter key areas, suggesting stronger and more persistent keys in that time period. This pattern is also observed from 150s-180s. By listening to this track, we hear the transitions that are observed in the keygram. 
+</div>
 
-- **Chordogram:** Similarly to the keygram, we observe the same structures in the same time periods. However, from 0s-55s we observe a different pattern, where the sections are more all over the place. This suggests frequent chord changes and modulation between keys. This structure is also observed from 100s-150s. The areas 55s-100s and 150s-180s have a more stable pattern, suggesting recurring chord progressions.
+### Chromagram Track 1 {data-width="350"}
 
-#### Track 2
+``` {r  chromagram 1}
+"features/acidity-desmond-l-1.json" |>   
+  compmus_chroma(norm = "identity") |>                 # Change the norm
+  ggplot(aes(x = time, y = pc, fill = value)) + 
+  geom_raster() +
+  scale_y_continuous(
+    breaks = 0:11,
+    minor_breaks = NULL,
+    labels = c(
+                "C", "C#|Db", "D", "D#|Eb",
+                "E", "F", "F#|Gb", "G",
+                "G#|Ab", "A", "A#|Bb", "B"
+              )
+  ) +
+  scale_fill_viridis_c(guide = "none") + 
+  labs(x = "Time (s)", y = NULL, fill = NULL, title="Chromagram Track 1 (ACIDITY)") +
+  theme_classic()                                      # Change the theme?  
+```
+<div style="margin-top: 20px; padding: 10px;">
 
-```{r, out.width="50%", out.height="30%"}
-"features/desmond-l-2.json" |> 
-  compmus_chroma(norm = "identity") |> 
+The Chromagram confirms our observations from the Keygram and Chordagram. As we thought, the track mainly appears in A, mainly in the regions between 55s-100s and after 150s. The same segments that we saw in both previous graphs. In the 0-55s and 110-150 segments we also observe occurences of F, C and E.
+
+</div>
+
+### Chroma-based Self Similarity Track 1 {data-width="350"}
+
+``` {r  chromabased self 1}
+"features/acidity-desmond-l-1.json" |>   
+  compmus_chroma(norm = "identity") |>                 # Change the norm
+  compmus_self_similarity(
+    feature = pc,
+    distance = "euclidean"                             # Change the distance
+  ) |>   
+  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") + 
+  labs(x = "Time (s)", y = NULL, fill = NULL, title="Chroma-based self-similarity Track 1 (ACIDITY") +
+  theme_classic()                                      # Change the theme?
+
+```
+<div style="margin-top: 20px; padding: 10px;">
+
+In this graph, we observe that this track is clearly divided in four segments. The first segment, has a stable intro that builds up. Then,
+We observe checkerboard patterns in the segments 55-100s and 150-180s, just as we observed before, these regions were mainly in A. Checkerboard patterns suggest that we have homogeneous patterns, therefore the motifs we hear in the track, are in A. 
+Between 100-150s, we see horizontal and vertical lines, meaning it revisits what we heard in the first segment.
+
+</div>
+
+Track 2 grams {.tabset}
+------------------------------------------------------------------
+### Keygram Track 2 {data-width="350"}
+
+``` {r  keygram 2}
+"features/groovey-desmond-l-2.json" |> 
+  compmus_chroma(norm = "identity") |>                 # Change the norm
   compmus_match_pitch_templates(
-    key_templates,         # Change to chord_templates if desired
-    norm = "identity",       # Try different norms (and match it with what you used in `compmus_chroma`)
-    distance = "cosine"   # Try different distance metrics
+    key_templates,  
+    norm = "euclidean",  
+    distance = "manhattan" 
   ) |>
   ggplot(aes(x = time, y = name, fill = d)) + 
   geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = "Template", fill = NULL, title="Keygram Track 2") +
-  theme_classic()                                      # Change the theme?
+  scale_fill_viridis_c(guide = "none") +      
+  labs(x = "Time (s)", y = "Template", fill = NULL, title="Keygram Track 2 (GROOVEY)") +
+  theme_classic()
+```
+<div style="margin-top: 20px; padding: 10px;">
 
-"features/desmond-l-2.json" |> 
-  compmus_chroma(norm = "identity") |> 
+This Keygram is more evenly distributed across many keys. The only consistency in this track we observe is in A. It seems that there is no clear structure in this track according to the Keygram, as it seems consistent throughout the whole track.
+
+</div>
+
+### Chordogram Track 2 {data-width="350"}
+
+``` {r chordogram 2}
+"features/groovey-desmond-l-2.json" |> 
+  compmus_chroma(norm = "identity") |>                 # Change the norm
   compmus_match_pitch_templates(
-    chord_templates,         # Change to chord_templates if desired
-    norm = "identity",       # Try different norms (and match it with what you used in `compmus_chroma`)
-    distance = "cosine"   # Try different distance metrics
+    chord_templates,  
+    norm = "euclidean",  
+    distance = "manhattan" 
   ) |>
   ggplot(aes(x = time, y = name, fill = d)) + 
   geom_raster() +
+  scale_fill_viridis_c(guide = "none") +      
+  labs(x = "Time (s)", y = "Template", fill = NULL, title="Chordogram Track 2 (GROOVEY)") +
+  theme_classic()
+```
+<div style="margin-top: 20px; padding: 10px;">
+
+Confirming our assumptions from the keygram, the chords around A major and A minor are the only consistent chords we observe. As we also saw before, it has a very continuous structure. Besides A, we also observe many different chords present across the whole track.
+
+</div>
+
+### Chromagram Track 2 {data-width="350"}
+
+``` {r chromagram 2}
+"features/groovey-desmond-l-2.json" |>   
+  compmus_chroma(norm = "identity") |>                 # Change the norm
+  ggplot(aes(x = time, y = pc, fill = value)) + 
+  geom_raster() +
+  scale_y_continuous(
+    breaks = 0:11,
+    minor_breaks = NULL,
+    labels = c(
+                "C", "C#|Db", "D", "D#|Eb",
+                "E", "F", "F#|Gb", "G",
+                "G#|Ab", "A", "A#|Bb", "B"
+              )
+  ) +
   scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = "Template", fill = NULL, title="Chordogram Track 2") +
+  labs(x = "Time (s)", y = NULL, fill = NULL, title="Chromagram Track 2 (GROOVEY)") +
+  theme_classic()                                      # Change the theme?  
+```
+<div style="margin-top: 20px; padding: 10px;">
+
+As we concluded before, there is a consistent bright pattern across A, making it the dominant pitch class. Also, there’s light but consistent use of G#, B, E, and D, adding harmonic color.
+
+</div>
+
+### Chroma-based Self Similarity Track 2 {data-width="350"}
+
+``` {r  chromabased self 2}
+"features/groovey-desmond-l-2.json" |>   
+  compmus_chroma(norm = "identity") |>                 # Change the norm
+  compmus_self_similarity(
+    feature = pc,
+    distance = "euclidean"                             # Change the distance
+  ) |>   
+  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL, title="Chroma-based self-similarity Track 2 (GROOVEY)") +
   theme_classic()                                      # Change the theme?
 ```
+<div style="margin-top: 20px; padding: 10px;">
 
-***
-**Track 2**:
+**Comment:**  
+This self-similarity matrix confirms our assumptions of our track being very continuous, the graph has a very dense grid-like structure, indicating a lot of repetition. This confirms that our track seems very chaotic and all over the place, because there are no parts that occur for a long time.
+</div>
 
-- **Keygram:** Here we observe a more distributed key activation compared to the first track. The lack of bright areas also suggest more key shifts, opposed to the patterns observed in the first track. This means that the second track is more varied harmonically. No key dominates over a longer time period. 
-
-- **Chordogram:** Compared to the keygram, the chordogram has more persistent bright regions, meaning that certain chord progressions last for longer periods. Overall, this track is more complex and chaotic than the first track. While listening to the track, I can confirm this. This track has way more frequent modulations and less structure, feeling all over the place.
-
-### Tempogram
-
-```{r, out.width="50%", out.height="30%"}
-"features/desmond-l-1.json" |>
-  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
-  ggplot(aes(x = time, y = bpm, fill = power)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +
-  labs(x = "Time (s)", y = "Tempo (BPM)", title="Cyclic Tempogram Track 1") +
-  theme_classic()
-
-"features/desmond-l-2.json" |> 
-  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
-  ggplot(aes(x = time, y = bpm, fill = power)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +
-  labs(x = "Time (s)", y = "Tempo (BPM)", title="Cyclic Tempogram Track 2") +
-  theme_classic()
-```
-
+Conclusion {.tabset}
+------------------------------------------------------------------
+### Conclusion
 ***
 
-- **Tempogram Track 1:** TBC
+If we compare our tracks, ACIDITY has a more clear structure with A being the dominant Tonal center. Even though GROOVEY is A-rooted, it is more distributed across the track. The chords in our first track also seem structured in segments with concentrationg around certain keys, while in the second track it seems all over the place, with a wide range. To conclude our observations, ACIDITY delivers a more evolving journey with 'chapters' across the track, while GROOVEY throws away all structure, being very repetitive with lot of intensity and unpredictability, releasing a lot of energy on the dancefloor. 
 
-- **Tempogram Track 2:** TBC
+Loudness
+=================================================================================
 
-### Track Novelty
+Track 1 grams {.tabset}
+-----------------------------------------------------------------------------------------
+### Energy Novelty Function Track 1 {data-width="350"}
 
-#### Track 1
-
-```{r, out.width="50%", out.height="30%"}
-"features/desmond-l-1.json" |>
+``` {r energy novelty 1}
+"features/acidity-desmond-l-1.json" |>
   compmus_energy_novelty() |> 
   ggplot(aes(t, novelty)) +
   geom_line() +
   theme_minimal() +
-  labs(x = "Time (s)", y = "Energy Novelty", title="Energy Novelty Track 1")
-
-"features/desmond-l-1.json" |> 
-  compmus_spectral_novelty() |> 
-  ggplot(aes(t, novelty)) +
-  geom_line() +
-  theme_minimal() +
-  labs(x = "Time (s)", y = "Spectral Novelty", title="Spectral Novelty Track 1")
+  labs(x = "Time (s)", y = "Energy Novelty", title="Energy Novelty Track 1 (ACIDITY)")
 ```
+<div style="margin-top: 20px; padding: 10px;">
 
-***
+The track has big spike between 0-10s, the intro, followed by smaller ones till 25s. This suggests a strong intro to grab the listeners attention. Later, at 50s we have another spike of high energy, marking a transition. This aligns with the observations earlier, where we saw an segment from 0-50s and another segment starting at 50s. After this spike, we see a steady progression in energy, with another spike at around 110-120s, marking another transition. The last energy spike we observe is after 150s, confirming our four segment structure.
 
-**Track 1**:
+</div>
 
-- **Energy Novelty:** TBC
+Track 2 grams {.tabset}
+------------------------------------------------------------------
+### Energy Novelty Function Track 2 {data-width="350"}
 
-- **Spectral Novelty:** TBC
-
-#### Track 2
-
-```{r, out.width="50%", out.height="30%"}
-"features/desmond-l-2.json" |>
+``` {r energy novelty 2}
+"features/groovey-desmond-l-2.json" |>
   compmus_energy_novelty() |> 
   ggplot(aes(t, novelty)) +
   geom_line() +
   theme_minimal() +
-  labs(x = "Time (s)", y = "Energy Novelty", title="Energy Novelty Track 2")
+  labs(x = "Time (s)", y = "Energy Novelty", title="Energy Novelty Track 2 (GROOVEY)")
+```
+<div style="margin-top: 20px; padding: 10px;">
 
-"features/desmond-l-2.json" |> 
+This track also begins with a large energy spike, followed by many micro-spikes, indicating a lot of variation in the track. Also, the energy spikes seem not that high and also more constant, indicating a lot of variation across the track. As the track progresses, we see larger micro spikes, suggesting that the song builds up in intensity over time. As we observed earlier, this track is rather consistent, does not really have structure and does not stand out in parts, which is clear after analyzing this graph. This consistency keeps the listener engaged, as it creates a driving and hypnotic energy.
+
+</div>
+
+Conclusion {.tabset}
+------------------------------------------------------------------
+### Conclusion
+***
+The first track has higher peaks between parts in the song, indicating that we have more clear transitions. The second track has smaller peaks, but more constant and progressing peaks. This means that if we have to compare the tracks, the first track has more structure and the second track is more continuous and non-stop. Both tracks are ideal for rave settings, where the first track is more about evolving structures and the second track is more hypnotic.
+
+Timbre
+=================================================================================
+
+Track 1 grams {.tabset}
+-----------------------------------------------------------------------------------------
+### Cepstrogram Track 1 {data-width="350"}
+
+``` {r cepstrogram 1}
+"features/acidity-desmond-l-1.json" |>  
+  compmus_mfccs(norm = "identity") |>                  # Change the norm
+  ggplot(aes(x = time, y = mfcc, fill = value)) + 
+  geom_raster() +
+  scale_y_continuous(
+    breaks = 0:12,
+    minor_breaks = NULL,
+  ) +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = "Coefficient Number", fill = NULL, title="Cepstrogram Track 1 (ACIDITY") +
+  theme_classic()                                      # Change the theme?
+```
+<div style="margin-top: 20px; padding: 10px;">
+
+At the lower region, the song has high spectral energy in the first 10 seconds, as we observed in the Energy Novelty function before. After this spike, it stagnates till a smaller peak around 60-70s. This Between 90s-150s we see a stable progression with another peak after 150 seconds. This confirms our four segment structure. 
+</div>
+
+### Spectral Novelty Track 1 {data-width="350"}
+
+```{r}
+"features/acidity-desmond-l-1.json" |>  
   compmus_spectral_novelty() |> 
   ggplot(aes(t, novelty)) +
   geom_line() +
   theme_minimal() +
-  labs(x = "Time (s)", y = "Spectral Novelty", title="Spectral Novelty Track 2")
+  labs(x = "Time (s)", y = "Spectral Novelty", title="Spectral Novelty Track 1 (ACIDITY)")
+```
+<div style="margin-top: 20px; padding: 10px;">
+
+This spectral novelty function corresponds with our findings in the Cepstrogram. A local peak at the beginning, followed by another peak at 60 seconds. Continued by a consistent progression till we get another peak at around 160 seconds.
+
+</div>
+
+### Timbre-based self-similarity Track 1 {data-width="350"}
+
+``` {r Timbre self 1}
+"features/acidity-desmond-l-1.json" |>  
+  compmus_mfccs(norm = "identity") |>                  # Change the norm
+  compmus_self_similarity(
+    feature = mfcc,
+    distance = "euclidean"                             # Change the distance
+  ) |>   
+  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL, title="Timbre-based self-similarity Track 1 (ACIDITY)") +
+  theme_classic()    
+```
+<div style="margin-top: 20px; padding: 10px;">
+
+From the edges, we observe bright squares, showing that we have a similar timbre pattern across the track. Around 50-60s we see a notable change, marking a transition. Along 90-150s, we observe a big square, which indicates high similarity during that period.  This indicates that we have stable timbre 
+throughout that duration. After that segment, we see another square, indicating a different segment with another consistent timbre pattern.
+
+</div>
+
+Track 2 grams {.tabset}
+-----------------------------------------------------------------------------------------
+### Cepstrogram Track 2 {data-width="350"}
+
+``` {r cepstrogram 2}
+"features/groovey-desmond-l-2.json" |>  
+  compmus_mfccs(norm = "identity") |>                  # Change the norm
+  ggplot(aes(x = time, y = mfcc, fill = value)) + 
+  geom_raster() +
+  scale_y_continuous(
+    breaks = 0:12,
+    minor_breaks = NULL,
+  ) +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = "Coefficient Number", fill = NULL, title="Cepstrogram Track 2 (GROOVEY)") +
+  theme_classic()                                      # Change the theme?
+```
+<div style="margin-top: 20px; padding: 10px;">
+
+As we expected from the other graphs, there are no notable changes across the track. This is also seen in this Cepstrogram. The coefficients remain relative uniform, meaning the spectral content has minimal changes. However, at 160-180s we see slightly brigher activity at the lower regions, suggesting a late climax.
+
+</div>
+### Spectral Novelty Track 2 {data-width="350"}
+
+```{r}
+"features/groovey-desmond-l-2.json" |>  
+  compmus_spectral_novelty() |> 
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Spectral Novelty", title="Spectral Novelty Track 2 (GROOVEY)")
+```
+<div style="margin-top: 20px; padding: 10px;">
+This graph confirms our findings from the Cepstrogram. We see a relatively stable progression with high spectral activity towards the end.
+</div>
+
+### Timbre-based self-similarity Track 2 {data-width="350"}
+
+``` {r Timbre self 2}
+"features/groovey-desmond-l-2.json" |>  
+  compmus_mfccs(norm = "identity") |>                  # Change the norm
+  compmus_self_similarity(
+    feature = mfcc,
+    distance = "euclidean"                             # Change the distance
+  ) |>   
+  ggplot(aes(x = xtime, y = ytime, fill = d)) + 
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL, title="Timbre-based self-similarity Track 2 (GROOVEY)") +
+  theme_classic()    
+```
+<div style="margin-top: 20px; padding: 10px;">
+The self-similarity matrix is almost uniformly dark with a big squared pattern, suggesting that the timbre is very consistent over time. We see small horizontal and vertical lines, indicating subtle changes, but mostly consistent. Towards the end we see a square that is isolated from the other big square, indicating the last climax at the outro.
+
+</div>
+
+Conclusion {.tabset}
+------------------------------------------------------------------
+### Conclusion
+From the graphs we can derive that ACIDITY is built with clear sections with transitional structure. In contrast to GROOVEY, which has a more flat and consistent timbral structure. Compared to ACIDITY, GROOVEY has higher, and more constant, frequency spikes but no structural shifts, keeping the energy high and progressive.
+
+Temporal
+=================================================================================
+
+Track 1 grams {.tabset}
+-----------------------------------------------------------------------------------------
+### Cyclic Tempogram Track 1 {data-width="350"}
+
+```{r cyctempogram 1}
+"features/acidity-desmond-l-1.json" |>  
+  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)", title="Cyclic Tempogram Track 1 (ACIDITY)") +
+  theme_classic()
+```
+<div style="margin-top: 20px; padding: 10px;">
+
+In the intro of the track, from 0-40s we observe a very unstable tempo, with alot of fluctuations ranging from 80 BPM to 160 BPM. After this segment, there is quite a stable trend from 50-150s at around 135 BPM. At 150s we see a slight bump from 135 BPM to 130 BPM, marking a transition for the outro. 5-10 seconds later the tempo stabilizes at 135 BPM again.
+
+</div>
+
+Track 2 grams {.tabset}
+-----------------------------------------------------------------------------------------
+### Cyclic Tempogram Track 2 {data-width="350"}
+
+```{r cyctempogram 2}
+"features/groovey-desmond-l-2.json" |>  
+  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)", title="Cyclic Tempogram Track 2 (GROOVEY)") +
+  theme_classic()
+```
+<div style="margin-top: 20px; padding: 10px;">
+
+As expected, GROOVEY maintains a very stable tempo at 145 BPM throughout the whole track. The only disturbance occurs around the end of the track, around 160s we see a short, but very strong dip in BPM. The disruption marks the end of the track.
+
+</div>
+
+Track 2 grams {.tabset}
+-----------------------------------------------------------------------------------------
+### Conclusion
+In terms of tempo, ACIDITY is divided in two structures with different temporal identity. The first section, 0-40s, has a messy structure, followed by a relatively stable tempo with only one brief disturbance. GROOVEY, on the other hand has a flat tempo with also one brief disturbance. The similarity the tracks share is that the tempo is similar, both in the same range of 135-145 BPM, and that they both share a tempo dip near the end of the track.
+
+Classification
+=================================================================================
+
+```{r}
+
+get_conf_mat <- function(fit) {
+  outcome <- .get_tune_outcome_names(fit)
+  fit |> 
+    collect_predictions() |> 
+    conf_mat(truth = outcome, estimate = .pred_class)
+}  
+
+get_pr <- function(fit) {
+  fit |> 
+    conf_mat_resampled() |> 
+    group_by(Prediction) |> mutate(precision = Freq / sum(Freq)) |> 
+    group_by(Truth) |> mutate(recall = Freq / sum(Freq)) |> 
+    ungroup() |> filter(Prediction == Truth) |> 
+    select(class = Prediction, precision, recall)
+}  
+
+compmus2025_filtered <- 
+  compmus2025 |> filter(!is.na(ai)) |> 
+  mutate(ai = factor(if_else(ai, "AI", "Non-AI")))
+
+classification_recipe <-
+  recipe(
+    ai ~
+      arousal +
+      approachability +
+      engagingness +
+      danceability +
+      instrumentalness +
+      tempo +
+      valence,
+    data = compmus2025_filtered
+  ) |>
+  step_center(all_predictors()) |>
+  step_scale(all_predictors())      # Converts to z-scores.
+  # step_range(all_predictors())    # Sets range to [0, 1].
+
+compmus_cv <- compmus2025_filtered |> vfold_cv(5)
 ```
 
-***
-**Track 2**:
+```{r}
+knn_model <-
+  nearest_neighbor(neighbors = 1) |>
+  set_mode("classification") |> 
+  set_engine("kknn")
+classification_knn <- 
+  workflow() |> 
+  add_recipe(classification_recipe) |> 
+  add_model(knn_model) |> 
+  fit_resamples(compmus_cv, control = control_resamples(save_pred = TRUE))
+```
 
-- **Energy Novelty:** TBC
+Baseline Model {.tabset}
+-----------------------------------------------------------------------------------------
 
-- **Spectral Novelty:** TBC
+### Baseline Model using all Essentia Features
+
+To build a model to classify which tracks are made by AI and which are human-made, we will train a K-Nearest Neighbor model (with 1 neighbor) using all features we have in the corpus. The features include: danceability, valence, arousal, engaginess, tempo, instrumentalness,  and approachability. The performance of this model will be used as benchmark for future iterations to create the most optimal model for the classification task. 
+
+### Classification & Metrics
+```{r, echo=FALSE}
+classification_knn |> get_conf_mat() |> autoplot(type = "heatmap")
+```
+```{r, echo=FALSE}
+
+classification_knn |> 
+  get_pr() |> 
+  gt() |> 
+  tab_header(
+    title = "Precision and Recall (KNN Baseline)"
+  )
+```
+
+The heatmap returns the accuracy of our model, with True Positives on the Top-Left corner, True Negatives on the Bottom-Right corner, and False Positives/Negatives on the Top-Right and Bottom-Left corner respectively.
+
+Precision tells us how many of the tracks the model labeled as as AI/Non-AI were actually correct, while Recall measures how many of the actual tracks from a class the model successfully identified.
+
+Precision = Correct positives / All predicted Positives
+Recall = Correct positives / All actual positives
+
+### Feature Importance
+```{r}
+forest_model <-
+  rand_forest() |>
+  set_mode("classification") |> 
+  set_engine("ranger", importance = "impurity")
+indie_forest <- 
+  workflow() |> 
+  add_recipe(classification_recipe) |> 
+  add_model(forest_model) |> 
+  fit_resamples(
+    compmus_cv, 
+    control = control_resamples(save_pred = TRUE)
+  )
+
+workflow() |> 
+  add_recipe(classification_recipe) |> 
+  add_model(forest_model) |> 
+  fit(compmus2025_filtered) |> 
+  pluck("fit", "fit", "fit") |>
+  ranger::importance() |> 
+  enframe() |> 
+  mutate(name = fct_reorder(name, value)) |> 
+  ggplot(aes(name, value)) + 
+  geom_col() + 
+  coord_flip() +
+  theme_minimal() +
+  labs(x = NULL, y = "Importance")
+```
+
+<div style="margin-top: 20px; padding: 10px;">
+
+Using a Random Forest model, we can extract the importance of each feature contributing to our predictions. As observed, approachability, tempo and engaginess contribute the least to our predictions. With this information, we will re-train our model without these features to check if we can yield better results.
+
+</div>
+
+Final Model {.tabset}
+-----------------------------------------------------------------------------------------
+
+### Final Model with Selected Features
+
+As an attempt to improve our model, we removed the least significant features from the base model. Our new feature set include: danceability, valence, arousal and instrumentalness.
+
+Again, we will train a K-Nearest Neighbor model for our predictions.
+
+```{r}
+classification_recipe <-
+  recipe(
+    ai ~
+      arousal +
+      danceability +
+      instrumentalness +
+      valence,
+    data = compmus2025_filtered
+  ) |>
+  step_center(all_predictors()) |>
+  step_scale(all_predictors())      # Converts to z-scores.
+  # step_range(all_predictors())    # Sets range to [0, 1].
+
+compmus_cv <- compmus2025_filtered |> vfold_cv(5)
+```
+
+```{r}
+knn_model <-
+  nearest_neighbor(neighbors = 1) |>
+  set_mode("classification") |> 
+  set_engine("kknn")
+classification_knn <- 
+  workflow() |> 
+  add_recipe(classification_recipe) |> 
+  add_model(knn_model) |> 
+  fit_resamples(compmus_cv, control = control_resamples(save_pred = TRUE))
+```
+
+### Classification & Metrics
+```{r, echo=FALSE}
+classification_knn |> get_conf_mat() |> autoplot(type = "heatmap")
+```
+```{r, echo=FALSE}
+classification_knn |> 
+  get_pr() |> 
+  gt() |> 
+  tab_header(
+    title = "Precision and Recall (KNN Final)"
+  )
+```
+
+We observe that our model has improved. The amount of False Positives in the AI class has gone down, and the Precision has improved. We also observe significant improvement in the Recall for the Non-AI class. Using the most predictive features yields better results in classifying our tracks if its AI-generated or human made.
+
+Conclusion
+=================================================================================
+
+Track 1 grams {.tabset}
+-----------------------------------------------------------------------------------------
+### Are ACIDITY and GROOVEY Rave-Ready?
+
+After deep-diving into both tracks based on low-level features and high-level structures, we can safely assume that **ACIDITY** and **GROOVEY** each bring unique strengths to the Rave Bunker, each in their own way.
+
+**ACIDITY** feels like a track that drags you into a journey, with an evolving structures with clear transitions. Built with shifts of high energy novelty, full of harmonic and timbre content building up to peak moments. The BPM of 135 combined with its foundation in A minor and major brings lot of emotional depth, ideal for the dancefloor.
+
+**GROOVEY** is all about constant hypnotic repetition. It has a stable, yet high tempo which a progressive timbral and energy profile, built for an intense rave experience. Its high density and progressive structure keeps the ravers engaged without relying on high climatic moments.
+
+Track 2 grams {.tabset}
+-----------------------------------------------------------------------------------------
+### Classification Plot
+
+```{r}
+compmus2025_filtered |>
+  ggplot(aes(x = arousal, y = valence, colour = ai, size = danceability, label = filename)) +
+  geom_point(alpha = 0.8) +
+  geom_text(                  # Add text labels from above.
+    x = 4.478108,
+    y = 3.986315,
+    label = "acidity-desmond-l-1",
+    size = 3,                 # Override size (not loudness here).
+    hjust = "left",           # Align left side of label with the point.
+    vjust = "center",         # Align vertical centre of label with the point.
+    angle = 30,                # Rotate the text label
+    color = "red"
+  ) +
+  geom_text(                  # Add text labels from above.
+    x = 5.076702,
+    y = 4.366221,
+    label = "groovey-desmond-l-2",
+    size = 3,                 # Override size (not loudness here).
+    hjust = "left",           # Align left side of label with the point.
+    vjust = "center",         # Align vertical centre of label with the point.
+    angle = 30,                # Rotate the text label
+    color = "blue"
+  ) +
+  scale_color_viridis_d() +
+  labs(
+    title = "AI vs Non-AI based on Valence, arousal, and danceability",
+    x = "Arousal",
+    y = "Valence",
+    size = "Danceability",
+    colour = "AI"
+  )
+ggplotly()
+```
+
+### Classification Conclusion
+
+We revisit the graph from the Introduction to analyze if there is any seperation between AI and Non-AI tracks in the same feature space. According to the graph, there is no strong seperation between the both classes, the points appear clustered around similar Aorusal and Valence values. Dancability seems also be spread out. However, for non-AI tracks with high valence/arousal values, it seems that they are quite dancable. Opposed to AI tracks, where there are high valence tracks with low dancability.
+
