@@ -942,6 +942,8 @@ After deep-diving into both tracks based on low-level features and high-level st
 
 **GROOVEY** is all about constant hypnotic repetition. It has a stable, yet high tempo which a progressive timbral and energy profile, built for an intense rave experience. Its high density and progressive structure keeps the ravers engaged without relying on high climatic moments.
 
+I have learned a lot from this course. I had no previous musical experience or knowledge, but after this course I got to know that music can be dissected in many different ways I did not know before. I found it very interesting that there were any different graphs that could each be interpreted in their own way. It was interesting to, instead of 'listen' to a track, you could 'read' it based on the graphs and then make assumptions of it that you could hear back when listening to the track.
+
 Track 2 grams {.tabset}
 -----------------------------------------------------------------------------------------
 ### Classification Plot
